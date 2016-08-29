@@ -1,0 +1,2 @@
+# InformationVisualization
+Information Visualization Class 
