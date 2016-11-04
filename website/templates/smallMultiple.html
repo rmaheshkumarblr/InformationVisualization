@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('.static', filename='js/d3.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/topojson.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/datamaps.world.hires.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/jquery-1.12.4.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/jquery-ui.js')}}" charset="utf-8"></script>
+    
+{% endblock %}
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='css/jquery-ui.css')}}">
+{% endblock %}
+
+
+{% block page_content %}
+
+
+<center><h1>Correlate the accidents between two decades</h1></center>
+
+
+ 
+<!-- <div id="container" style="position: relative; width: 500px; height: 300px;"></div> -->
+<div class="row">
+<div id="container_1920" class="col-md-4"><center><b>1920-1930</b></center></div>
+<div id="container_1930" class="col-md-4"><center><b>1930-1940</b></center></div>
+<div id="container_1940" class="col-md-4"><center><b>1940-1950</b></center></div>
+</div><div class="row">
+<div id="container_1950" class="col-md-4"><center><b>1950-1960</b></center></div>
+<div id="container_1960" class="col-md-4"><center><b>1960-1970</b></center></div>
+<div id="container_1970" class="col-md-4"><center><b>1970-1980</b></center></div>
+</div><div class="row">
+<div id="container_1980" class="col-md-4"><center><b>1980-1990</b></center></div>
+<div id="container_1990" class="col-md-4"><center><b>1990-2000</b></center></div>
+<div id="container_2000" class="col-md-4"><center><b>2000-2010</b></center></div>
+</div>
+<div class="row">
+<div id="container_2010" class="col-md-4"><center><b>2010-2020</b></center></div>
+<div id="container_summary" class="col-md-8"><center><b>2010-2020</b></center></div>
+</div>
+</div>
+<script>
+
+if (!Array.prototype.filter) {
+  Array.prototype.filter = function(fun/*, thisArg*/) {
+    'use strict';
+
+    if (this === void 0 || this === null) {
+      throw new TypeError();
+    }
+
+    var t = Object(this);
+    var len = t.length >>> 0;
+    if (typeof fun !== 'function') {
+      throw new TypeError();
+    }
+
+    var res = [];
+    var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+    for (var i = 0; i < len; i++) {
+      if (i in t) {
+        var val = t[i];
+
+        // NOTE: Technically this should Object.defineProperty at
+        //       the next index, as push can be affected by
+        //       properties on Object.prototype and Array.prototype.
+        //       But that method's new, and collisions should be
+        //       rare, so use the more-compatible alternative.
+        if (fun.call(thisArg, val, i, t)) {
+          res.push(val);
+        }
+      }
+    }
+
+    return res;
+  };
+}
+
+d3.json("/yearVsAccidents", function(error, data) {
+    // var map = new Datamap({element: document.getElementById('container')});
+    // console.log(data)
+
+
+    for (var i = 1920; i < 2020; i=i+10) {
+      var bubble_map = new Datamap({
+      element: document.getElementById("container"+"_"+i),
+      geographyConfig: {
+        popupOnHover: false,
+        highlightOnHover: false
+      },
+      fills: {
+        defaultFill: '#ABDDA4',
+        fatalities: 'red',
+        nofatalities: 'blue'
+      }
+      });
+
+      year = i;
+      function filterByYear(obj)
+      {
+        if(obj.year >= year && obj.year < (year+10))
+        {
+          return true;
+        }
+        else
+        {
+          return false;
+        }
+      }
+
+      dataToPlot = data.filter(filterByYear);
+      bubble_map.bubbles(dataToPlot, {
+        popupTemplate: function(geo, data) {
+          // console.log(data)
+          $('#container_summary').html("<center><h4> Summary </h4></center> <br> " + data['summary']);
+          return '<div class="hoverinfo">The Accident took place at: ' + data['location'] + '. The operator was ' + data['operator'] + '. Fatalities:' + data['fatalities'] + '</div>'
+        }
+      });
+
+      // console.log("Year: " + year + ", Data: " + dataToPlot)
+      // console.log(dataToPlot)
+      
+        //(
+        // {
+        //   name: 'Tsar Bomba',
+        //   // radius: 10,
+        //   yeild: 50000,
+        //   significance: 'Largest thermonuclear weapon ever tested—scaled down from its initial 100 Mt design by     50% ',
+        //   date: '1961-10-31',
+        //   latitude: 73.482,
+        //   longitude: 54.5854,
+        //   fillKey: 'FILL'
+        // }
+      // ]
+      // , {
+      //   popupTemplate: function(geo, data) {
+      //     return '<div class="hoverinfo">Yield:' + data.yeild + 'Exploded on ' + data.date + ' by the '  + data.      country + ''
+      //   }
+      // }
+      // );
+
+    }
+
+
+});
+
+setTimeout(function(){
+  var circle = d3.selectAll("circle");
+  circle.attr("r", 3);
+},1000); 
+
+
+</script>
+
+{% endblock %}
