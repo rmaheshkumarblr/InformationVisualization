@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('.static', filename='js/jquery-1.12.4.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/jquery-ui.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.v4.min.js')}}" charset="utf-8"></script>
+{% endblock %}
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='css/jquery-ui.css')}}">
+{% endblock %}
+
+
+{% block page_content %}
+
+
+<h1>Choropleth</h1>
+
+<!-- <p>
+  <label for="amount">No of Survivors Range: </label>
+  <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;">
+</p>
+ 
+<div id="slider-range"></div> -->
+
+
+
+{% endblock %}
