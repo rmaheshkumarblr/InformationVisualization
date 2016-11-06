@@ -12,6 +12,7 @@
 {% endblock %}
 {% block styles %}
 {{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='css/main.css')}}">
 <link rel="stylesheet" href="{{url_for('.static', filename='css/jquery-ui.css')}}">
 {% endblock %}
 
@@ -24,22 +25,22 @@
 
  
 <!-- <div id="container" style="position: relative; width: 500px; height: 300px;"></div> -->
-<div class="row">
-<div id="container_1920" class="col-md-4"><center><b>1920-1930</b></center></div>
-<div id="container_1930" class="col-md-4"><center><b>1930-1940</b></center></div>
-<div id="container_1940" class="col-md-4"><center><b>1940-1950</b></center></div>
-</div><div class="row">
-<div id="container_1950" class="col-md-4"><center><b>1950-1960</b></center></div>
-<div id="container_1960" class="col-md-4"><center><b>1960-1970</b></center></div>
-<div id="container_1970" class="col-md-4"><center><b>1970-1980</b></center></div>
-</div><div class="row">
-<div id="container_1980" class="col-md-4"><center><b>1980-1990</b></center></div>
-<div id="container_1990" class="col-md-4"><center><b>1990-2000</b></center></div>
-<div id="container_2000" class="col-md-4"><center><b>2000-2010</b></center></div>
+<div class="row outlined">
+<div id="container_1920" class="col-md-4 highlight"><center><b>1920-1930</b></center></div>
+<div id="container_1930" class="col-md-4 highlight"><center><b>1930-1940</b></center></div>
+<div id="container_1940" class="col-md-4 highlight"><center><b>1940-1950</b></center></div>
+</div><div class="row outlined">
+<div id="container_1950" class="col-md-4 highlight"><center><b>1950-1960</b></center></div>
+<div id="container_1960" class="col-md-4 highlight"><center><b>1960-1970</b></center></div>
+<div id="container_1970" class="col-md-4 highlight"><center><b>1970-1980</b></center></div>
+</div><div class="row outlined">
+<div id="container_1980" class="col-md-4 highlight"><center><b>1980-1990</b></center></div>
+<div id="container_1990" class="col-md-4 highlight"><center><b>1990-2000</b></center></div>
+<div id="container_2000" class="col-md-4 highlight"><center><b>2000-2010</b></center></div>
 </div>
-<div class="row">
-<div id="container_2010" class="col-md-4"><center><b>2010-2020</b></center></div>
-<div id="container_summary" class="col-md-8"><center><h4>Summary</h4></center></div>
+<div class="row outlined">
+<div id="container_2010" class="col-md-4 highlight"><center><b>2010-2020</b></center></div>
+<div id="container_summary" class="col-md-8 highlight"><center><h4>Summary</h4></center></div>
 </div>
 </div>
 <script>

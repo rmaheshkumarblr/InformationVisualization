@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('.static', filename='js/jquery-1.12.4.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/jquery-ui.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/topojson.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.geomap.dependencies.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.geomap.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.layout.cloud.js')}}" charset="utf-8"></script>
+
+{% endblock %}
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='css/jquery-ui.css')}}">
+<link rel="stylesheet" href="{{url_for('.static', filename='css/d3.geomap.css')}}">
+{% endblock %}
+
+
+{% block page_content %}
+
+<center>
+<div id ="choropleth"></div>
+
+
+<div id="map"></div>
+
+<form id="numberOfAccidnets">
+  <label for="year">Select the Year</label>
+  <select name="year" id="year">
+    <option>1908</option>
+    <option>1909</option>
+    <option>1910</option>
+    <option>1911</option>
+    <option>1912</option>
+    <option>1913</option>
+    <option>1914</option>
+    <option>1915</option>
+    <option>1916</option>
+    <option>1917</option>
+    <option>1918</option>
+    <option>1919</option>
+    <option>1920</option>
+    <option>1921</option>
+    <option>1922</option>
+    <option>1923</option>
+    <option>1924</option>
+    <option>1925</option>
+    <option>1926</option>
+    <option>1927</option>
+    <option>1928</option>
+    <option>1929</option>
+    <option>1930</option>
+    <option>1931</option>
+    <option>1932</option>
+    <option>1933</option>
+    <option>1934</option>
+    <option>1935</option>
+    <option>1936</option>
+    <option>1937</option>
+    <option>1938</option>
+    <option>1939</option>
+    <option>1940</option>
+    <option>1941</option>
+    <option>1942</option>
+    <option>1943</option>
+    <option>1944</option>
+    <option>1945</option>
+    <option>1946</option>
+    <option>1947</option>
+    <option>1948</option>
+    <option>1949</option>
+    <option>1950</option>
+    <option>1951</option>
+    <option>1952</option>
+    <option>1953</option>
+    <option>1954</option>
+    <option>1955</option>
+    <option>1956</option>
+    <option>1957</option>
+    <option>1958</option>
+    <option>1959</option>
+    <option>1960</option>
+    <option>1961</option>
+    <option>1962</option>
+    <option>1963</option>
+    <option>1964</option>
+    <option>1965</option>
+    <option>1966</option>
+    <option>1967</option>
+    <option>1968</option>
+    <option>1969</option>
+    <option>1970</option>
+    <option>1971</option>
+    <option>1972</option>
+    <option>1973</option>
+    <option>1974</option>
+    <option>1975</option>
+    <option>1976</option>
+    <option>1977</option>
+    <option>1978</option>
+    <option>1979</option>
+    <option>1980</option>
+    <option>1981</option>
+    <option>1982</option>
+    <option>1983</option>
+    <option>1984</option>
+    <option>1985</option>
+    <option>1986</option>
+    <option>1987</option>
+    <option>1988</option>
+    <option>1989</option>
+    <option>1990</option>
+    <option>1991</option>
+    <option>1992</option>
+    <option>1993</option>
+    <option>1994</option>
+    <option>1995</option>
+    <option>1996</option>
+    <option>1997</option>
+    <option>1998</option>
+    <option>1999</option>
+    <option>2000</option>
+    <option>2001</option>
+    <option>2002</option>
+    <option>2003</option>
+    <option>2004</option>
+    <option>2005</option>
+    <option>2006</option>
+    <option>2007</option>
+    <option>2008</option>
+    <option>2009</option>
+    <option>2010</option>
+    <option>2011</option>
+    <option>2012</option>
+    <option>2013</option>
+    <option>2014</option>
+    <option>2015</option>
+    <option>2016</option>
+  </select>
+</form>
+<div id ="tagCloud" class="col-md-12"></div>
+</center>
+<script type="text/javascript">
+
+$( function() {
+  var select = $( "#year" );
+  var slider = $( "<div id='slider'></div>" ).insertAfter( select ).slider({
+    min: 1,
+    max: 109,
+    range: "min",
+    value: select[ 0 ].selectedIndex + 1,
+    slide: function( event, ui ) {
+      // console.log(ui.value - 1 + 1908)
+      reloadMap(ui.value - 1 + 1908)
+      getKeyWords(ui.value - 1 + 1908)
+      select[ 0 ].selectedIndex = ui.value - 1;
+    }
+  });
+  $( "#year" ).on( "change", function() {
+    // console.log(this.selectedIndex + 1908)
+    reloadMap(this.selectedIndex + 1908)
+    getKeyWords(this.selectedIndex + 1908)
+    slider.slider( "value", this.selectedIndex + 1 );
+  });
+} );
+
+
+var format = function(d) {
+    d = d / 1000000;
+    return d3.format(',.02f')(d) + 'M';
+}
+
+var map = d3.geomap.choropleth()
+    .geofile('static/js/countries.json')
+    .colors(colorbrewer.YlGnBu[9])
+    .column('numberofaccidents')
+    .legend(true)
+    .unitId('country')
+    .duration(500)
+    .postUpdate(annotation);
+
+reloadMap(1908)
+getKeyWords(1908)
+
+function reloadMap(year)
+{
+    d3.csv('/yearVsAccidentsArea/'+year+'.csv', function(error, data) {
+        // console.log(data)
+
+        d3.selectAll("svg").remove();
+
+        d3.select('#map')
+          .datum(data)
+          .call(map.draw, map);
+
+        $('#choropleth').html("<center><h4> Choropleth - Number of accidents for the year: " + year + " </h4></center>");
+    });  
+} 
+
+function annotation() {
+     
+}
+
+
+
+function getKeyWords(year)
+{
+
+  d3.json("/reasonForAccident/"+year, function(error, data) {
+
+    if (error) return console.warn(error);
+
+    var max = d3.max(data, function(d) { return d.size; });
+    // var min = d3.min(data, function(d) { return d.size; });
+    var magnify = d3.scale.linear()
+              .domain([0, max])
+              .range([0, 100]);
+
+    // console.log(min,max)
+    frequency_list = data
+    // console.log(frequency_list)
+    // d3.selectAll("svg").remove();
+
+    var color = d3.scale.linear()
+              .domain([0,1,2,3,4,5,6,10,15,20,100])
+              .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555"  , "#444", "#333", "#222"]);
+  
+      d3.layout.cloud().size([950, 200])
+              .words(frequency_list)
+              .rotate(0)
+              .fontSize(function(d) { return magnify(d.size); })
+              .on("end", draw)
+              .start();
+  
+      function draw(words) {
+          d3.select("#tagCloud").append("svg")
+                  .attr("width", 1000)
+                  .attr("height", 225)
+                  .attr("class", "wordcloud")
+                  .append("g")
+                  // without the transform, words words would get cutoff to the left and  top, they would
+                  // appear outside of the SVG area
+                  .attr("transform", "translate(320,150)")
+                  .selectAll("text")
+                  .data(words)
+                  .enter().append("text")
+                  .style("font-size", function(d) { return d.size + "px"; })
+                  .style("fill", function(d, i) { return color(i); })
+                  .attr("transform", function(d) {
+                      return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                  })
+                  .text(function(d) { return d.text; });
+      }
+  
+    });
+}
+
+</script>
+
+
+
+{% endblock %}

@@ -1,4 +1,8 @@
 /*  For Bar Chart */
 .bar { fill: steelblue; }
 
-
+/*
+.outlined .highlight {
+  outline: 1px solid red;
+  background: transparent;
+}*/

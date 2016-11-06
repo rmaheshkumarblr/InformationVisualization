@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('.static', filename='js/jquery-1.12.4.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/jquery-ui.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.layout.cloud.js')}}" charset="utf-8"></script>
+{% endblock %}
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='css/jquery-ui.css')}}">
+{% endblock %}
+
+
+{% block page_content %}
+
+<div class="row">
+<center>
+<h1>Word Cloud</h1>
+<div id ="tagCloud" class="col-md-12"></div>
+</center>
+<form id="numberOfAccidnets">
+  <label for="year">Select the Year</label>
+  <select name="year" id="year">
+    <option>1908</option>
+    <option>1909</option>
+    <option>1910</option>
+    <option>1911</option>
+    <option>1912</option>
+    <option>1913</option>
+    <option>1914</option>
+    <option>1915</option>
+    <option>1916</option>
+    <option>1917</option>
+    <option>1918</option>
+    <option>1919</option>
+    <option>1920</option>
+    <option>1921</option>
+    <option>1922</option>
+    <option>1923</option>
+    <option>1924</option>
+    <option>1925</option>
+    <option>1926</option>
+    <option>1927</option>
+    <option>1928</option>
+    <option>1929</option>
+    <option>1930</option>
+    <option>1931</option>
+    <option>1932</option>
+    <option>1933</option>
+    <option>1934</option>
+    <option>1935</option>
+    <option>1936</option>
+    <option>1937</option>
+    <option>1938</option>
+    <option>1939</option>
+    <option>1940</option>
+    <option>1941</option>
+    <option>1942</option>
+    <option>1943</option>
+    <option>1944</option>
+    <option>1945</option>
+    <option>1946</option>
+    <option>1947</option>
+    <option>1948</option>
+    <option>1949</option>
+    <option>1950</option>
+    <option>1951</option>
+    <option>1952</option>
+    <option>1953</option>
+    <option>1954</option>
+    <option>1955</option>
+    <option>1956</option>
+    <option>1957</option>
+    <option>1958</option>
+    <option>1959</option>
+    <option>1960</option>
+    <option>1961</option>
+    <option>1962</option>
+    <option>1963</option>
+    <option>1964</option>
+    <option>1965</option>
+    <option>1966</option>
+    <option>1967</option>
+    <option>1968</option>
+    <option>1969</option>
+    <option>1970</option>
+    <option>1971</option>
+    <option>1972</option>
+    <option>1973</option>
+    <option>1974</option>
+    <option>1975</option>
+    <option>1976</option>
+    <option>1977</option>
+    <option>1978</option>
+    <option>1979</option>
+    <option>1980</option>
+    <option>1981</option>
+    <option>1982</option>
+    <option>1983</option>
+    <option>1984</option>
+    <option>1985</option>
+    <option>1986</option>
+    <option>1987</option>
+    <option>1988</option>
+    <option>1989</option>
+    <option>1990</option>
+    <option>1991</option>
+    <option>1992</option>
+    <option>1993</option>
+    <option>1994</option>
+    <option>1995</option>
+    <option>1996</option>
+    <option>1997</option>
+    <option>1998</option>
+    <option>1999</option>
+    <option>2000</option>
+    <option>2001</option>
+    <option>2002</option>
+    <option>2003</option>
+    <option>2004</option>
+    <option>2005</option>
+    <option>2006</option>
+    <option>2007</option>
+    <option>2008</option>
+    <option>2009</option>
+    <option>2010</option>
+    <option>2011</option>
+    <option>2012</option>
+    <option>2013</option>
+    <option>2014</option>
+    <option>2015</option>
+    <option>2016</option>
+  </select>
+</form>
+</div>
+
+<script>
+
+
+$( function() {
+  var select = $( "#year" );
+  var slider = $( "<div id='slider'></div>" ).insertAfter( select ).slider({
+    min: 1,
+    max: 109,
+    range: "min",
+    value: select[ 0 ].selectedIndex + 1,
+    slide: function( event, ui ) {
+      // console.log(ui.value - 1 + 1908)
+      getKeyWords(ui.value - 1 + 1908)
+      select[ 0 ].selectedIndex = ui.value - 1;
+    }
+  });
+  $( "#year" ).on( "change", function() {
+    // console.log(this.selectedIndex + 1908)
+    getKeyWords(this.selectedIndex + 1908)
+    slider.slider( "value", this.selectedIndex + 1 );
+  });
+} );
+
+// function getKeyWords(year)
+// {
+//   d3.json("/reasonForAccident/"+year, function(error, data) {
+//   if (error) return console.warn(error);
+//   console.log(data)
+//   });
+// }
+
+getKeyWords(1908)
+// var frequency_list;
+function getKeyWords(year)
+{
+
+  d3.json("/reasonForAccident/"+year, function(error, data) {
+
+    if (error) return console.warn(error);
+
+    var max = d3.max(data, function(d) { return d.size; });
+    // var min = d3.min(data, function(d) { return d.size; });
+    var magnify = d3.scale.linear()
+              .domain([0, max])
+              .range([0, 100]);
+
+    // console.log(min,max)
+    frequency_list = data
+    // console.log(frequency_list)
+    d3.selectAll("svg").remove();
+
+    var color = d3.scale.linear()
+              .domain([0,1,2,3,4,5,6,10,15,20,100])
+              .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555"  , "#444", "#333", "#222"]);
+  
+      d3.layout.cloud().size([800, 300])
+              .words(frequency_list)
+              .rotate(0)
+              .fontSize(function(d) { return magnify(d.size); })
+              .on("end", draw)
+              .start();
+  
+      function draw(words) {
+          d3.select("#tagCloud").append("svg")
+                  .attr("width", 850)
+                  .attr("height", 350)
+                  .attr("class", "wordcloud")
+                  .append("g")
+                  // without the transform, words words would get cutoff to the left and  top, they would
+                  // appear outside of the SVG area
+                  .attr("transform", "translate(320,200)")
+                  .selectAll("text")
+                  .data(words)
+                  .enter().append("text")
+                  .style("font-size", function(d) { return d.size + "px"; })
+                  .style("fill", function(d, i) { return color(i); })
+                  .attr("transform", function(d) {
+                      return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                  })
+                  .text(function(d) { return d.text; });
+      }
+  
+    });
+}
+// var frequency_list = [{"text":"study","size":40},{"text":"motion","size":15},{"text":"forces","size":10},{"text":"electricity","size":15},{"text":"movement","size":10},{"text":"relation","size":5},{"text":"things","size":10},{"text":"force","size":5},{"text":"ad","size":5},{"text":"energy","size":85},{"text":"living","size":5},{"text":"nonliving","size":5},{"text":"laws","size":15},{"text":"speed","size":45},{"text":"velocity","size":30},{"text":"define","size":5},{"text":"constraints","size":5},{"text":"universe","size":10},{"text":"physics","size":120},{"text":"describing","size":5},{"text":"matter","size":90},{"text":"physics-the","size":5},{"text":"world","size":10},{"text":"works","size":10},{"text":"science","size":70},{"text":"interactions","size":30},{"text":"studies","size":5},{"text":"properties","size":45},{"text":"nature","size":40},{"text":"branch","size":30},{"text":"concerned","size":25},{"text":"source","size":40},{"text":"google","size":10},{"text":"defintions","size":5},{"text":"two","size":15},{"text":"grouped","size":15},{"text":"traditional","size":15},{"text":"fields","size":15},{"text":"acoustics","size":15},{"text":"optics","size":15},{"text":"mechanics","size":20},{"text":"thermodynamics","size":15},{"text":"electromagnetism","size":15},{"text":"modern","size":15},{"text":"extensions","size":15},{"text":"thefreedictionary","size":15},{"text":"interaction","size":15},{"text":"org","size":25},{"text":"answers","size":5},{"text":"natural","size":15},{"text":"objects","size":5},{"text":"treats","size":10},{"text":"acting","size":5},{"text":"department","size":5},{"text":"gravitation","size":5},{"text":"heat","size":10},{"text":"light","size":10},{"text":"magnetism","size":10},{"text":"modify","size":5},{"text":"general","size":10},{"text":"bodies","size":5},{"text":"philosophy","size":5},{"text":"brainyquote","size":5},{"text":"words","size":5},{"text":"ph","size":5},{"text":"html","size":5},{"text":"lrl","size":5},{"text":"zgzmeylfwuy","size":5},{"text":"subject","size":5},{"text":"distinguished","size":5},{"text":"chemistry","size":5},{"text":"biology","size":5},{"text":"includes","size":5},{"text":"radiation","size":5},{"text":"sound","size":5},{"text":"structure","size":5},{"text":"atoms","size":5},{"text":"including","size":10},{"text":"atomic","size":10},{"text":"nuclear","size":10},{"text":"cryogenics","size":10},{"text":"solid-state","size":10},{"text":"particle","size":10},{"text":"plasma","size":10},{"text":"deals","size":5},{"text":"merriam-webster","size":5},{"text":"dictionary","size":10},{"text":"analysis","size":5},{"text":"conducted","size":5},{"text":"order","size":5},{"text":"understand","size":5},{"text":"behaves","size":5},{"text":"en","size":5},{"text":"wikipedia","size":5},{"text":"wiki","size":5},{"text":"physics-","size":5},{"text":"physical","size":5},{"text":"behaviour","size":5},{"text":"collinsdictionary","size":5},{"text":"english","size":5},{"text":"time","size":35},{"text":"distance","size":35},{"text":"wheels","size":5},{"text":"revelations","size":5},{"text":"minute","size":5},{"text":"acceleration","size":20},{"text":"torque","size":5},{"text":"wheel","size":5},{"text":"rotations","size":5},{"text":"resistance","size":5},{"text":"momentum","size":5},{"text":"measure","size":10},{"text":"direction","size":10},{"text":"car","size":5},{"text":"add","size":5},{"text":"traveled","size":5},{"text":"weight","size":5},{"text":"electrical","size":5},{"text":"power","size":5}];
+
+
+    
+</script>
+
+{% endblock %}

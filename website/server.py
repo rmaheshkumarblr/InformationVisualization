@@ -3,7 +3,9 @@ from flask_bootstrap import Bootstrap
 from collections import Counter
 import pycountry
 import csv
-
+import sklearn
+from sklearn.feature_extraction.text import CountVectorizer
+import re
 # Get list of all the countries in the ISO-Alpha3 format
 # pycountry.countries.__dict__['objects'][0].__dict__['_fields']['alpha_3']
 #for x in pycountry.countries.__dict__['objects']:
@@ -19,20 +21,25 @@ Bootstrap(app)
 def index():
     return render_template('base.html')
 
-
 @app.route("/smallMultiple")
 def smallMultiple():
     return render_template('smallMultiple.html')
-
 
 @app.route("/barChart")
 def barChart():
     return render_template('barChart.html')
 
-
 @app.route("/choropleth")
 def choropleth():
     return render_template('choropleth.html')
+
+@app.route("/tagCloud")
+def tagCloud():
+    return render_template('tagCloud.html')
+
+@app.route("/linkedView")
+def linkedView():
+    return render_template('linkedView.html')
 
 
 @app.route("/survivorsVsFlightType")
@@ -117,6 +124,28 @@ def yearVsAccidentsArea(year):
                 yield country + "," + str(0) + "\n"
     return Response(generate(), mimetype='text/csv')
 
+@app.route("/reasonForAccident/<year>")
+def reasonForAccident(year):
+    content = ""
+    result = []
+    with open('static/data/data.csv', 'rb') as csvfile:
+        dataReader = csv.reader(csvfile, delimiter=',')
+        for row in dataReader:
+            if row[9] == "Aboard":
+                continue
+            if row[0].split(",")[1].strip() == year and row[12] != "?" :
+                content += " " + row[12]
+        content = content.lower()
+        # print content
+        content = re.sub(r'[^\w\s]','',content)
+        countVectorizerOutput = CountVectorizer(stop_words='english').build_analyzer()(str(content.replace("\n"," ").split(" ")))
+        # print Counter(countVectorizerOutput).most_common()
+        # for key,value in Counter(countVectorizerOutput).items():
+        #     if value > 5:
+        #         keyWords = {"text":key, "size":value };
+        #         result.append(keyWords);
+        result = [{'text':key, 'size':value} for key,value in Counter(countVectorizerOutput).most_common(50)]
+    return jsonify(result)
 
 
 if __name__ == "__main__":
