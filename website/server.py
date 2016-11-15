@@ -25,6 +25,10 @@ def index():
 def smallMultiple():
     return render_template('smallMultiple.html')
 
+@app.route("/smallMultipleZoomInOne")
+def smallMultipleZoomInOne():
+    return render_template('smallMultipleZoomInOne.html')
+
 @app.route("/barChart")
 def barChart():
     return render_template('barChart.html')
