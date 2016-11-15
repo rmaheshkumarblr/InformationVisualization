@@ -33,6 +33,10 @@ def barChart():
 def choropleth():
     return render_template('choropleth.html')
 
+@app.route("/choroplethCumulative")
+def choroplethCumulative():
+    return render_template('choroplethCumulative.html')
+
 @app.route("/tagCloud")
 def tagCloud():
     return render_template('tagCloud.html')
@@ -123,6 +127,30 @@ def yearVsAccidentsArea(year):
             if country not in countriesPresent:
                 yield country + "," + str(0) + "\n"
     return Response(generate(), mimetype='text/csv')
+
+
+@app.route("/yearVsAccidentsAreaCumulative/<year>.csv")
+def yearVsAccidentsAreaCumulative(year):
+    cnt = Counter()
+    with open('static/data/data.csv', 'rb') as csvfile:
+        dataReader = csv.reader(csvfile, delimiter=',')
+        for row in dataReader:
+            if row[9] == "Aboard":
+                continue
+            if row[0].split(",")[1].strip() <= year and row[15] != "ERR:15:no country code found" and row[15] != "?" :
+                cnt[row[15]] += 1
+    countriesPresent = [];
+    def generate():
+        yield "country" + "," + "numberofaccidents" + "\n"
+        for key,value in cnt.items():
+            if key in countries_alpha2:
+                countriesPresent.append(pycountry.countries.get(alpha_2=key).alpha_3)
+                yield pycountry.countries.get(alpha_2=key).alpha_3 + "," + str(value) + "\n"
+        for country in countries:
+            if country not in countriesPresent:
+                yield country + "," + str(0) + "\n"
+    return Response(generate(), mimetype='text/csv')
+
 
 @app.route("/reasonForAccident/<year>")
 def reasonForAccident(year):
