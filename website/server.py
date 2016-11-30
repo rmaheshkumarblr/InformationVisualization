@@ -6,6 +6,8 @@ import csv
 import sklearn
 from sklearn.feature_extraction.text import CountVectorizer
 import re
+import numpy as np
+
 # Get list of all the countries in the ISO-Alpha3 format
 # pycountry.countries.__dict__['objects'][0].__dict__['_fields']['alpha_3']
 #for x in pycountry.countries.__dict__['objects']:
@@ -20,6 +22,10 @@ Bootstrap(app)
 @app.route("/")
 def index():
     return render_template('base.html')
+
+@app.route("/boxPlot")
+def boxPlot():
+    return render_template("boxplot.html")
 
 @app.route("/smallMultiple")
 def smallMultiple():
@@ -49,6 +55,69 @@ def tagCloud():
 def linkedView():
     return render_template('linkedView.html')
 
+@app.route("/boxPlotCalc")
+def boxPlotCalc():
+    bList = []
+    mList = []
+    dList = []
+    aList = []
+    tList = []
+    statList = []
+    cnt = Counter()
+
+
+    with open('static/data/boxplot_output.csv', 'rb') as csvfile:
+        dataReader = csv.reader(csvfile, delimiter=',')
+        for row in dataReader:
+            if "Boeing" in row[0]:
+                bList.append(float(row[3]))
+            elif "McDonnell" in row[0]:
+                mList.append(float(row[3]))
+            elif "Douglas" in row[0]:
+                dList.append(float(row[3]))
+            elif "Airbus" in row[0]:
+                aList.append(float(row[3]))
+            elif "Tupolev" in row[0]:
+                tList.append(float(row[3]))
+
+    cnt["Boeing"] = generateBoxPlotStats(bList)
+    cnt["McDonnell"] = generateBoxPlotStats(mList)
+    cnt["Douglas"] = generateBoxPlotStats(dList)
+    cnt["Airbus"]  = generateBoxPlotStats(aList)
+    cnt["Tupolev"] = generateBoxPlotStats(tList)
+    resultList = []
+    for value in cnt.items():
+        resultList.append(value[1])
+    #print resultList
+    #result = [value for value in cnt.items()]
+    result = [{'TypeOfFlight':key, 'boxplotstats':value} for key,value in cnt.items()]
+    return jsonify(result)
+
+
+
+def generateBoxPlotStats(listType):
+   
+    listType.sort()
+
+    atrList = np.array(listType)
+    #print atrList
+    minValue= min(atrList)
+    #print "minValue",minValue
+    maxValue= max(atrList)
+    #print "maxValue",maxValue
+    q1 = np.percentile(atrList,25)
+    #print "Q1",q1
+    median = np.median(atrList)
+    #print "Median",median
+    q3 = np.percentile(atrList,75)
+    #print "Q3",q3
+    statList = []
+    statList.append(minValue)
+    statList.append(q1)
+    statList.append(median)
+    statList.append(q3)
+    statList.append(maxValue)
+    return statList
 
 @app.route("/survivorsVsFlightType")
 def survivorsVsFlightType():
