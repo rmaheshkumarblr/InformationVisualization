@@ -27,7 +27,13 @@ data    -toggle="collapse" data-target=".navbar-collapse">
             <ul class="nav navbar-nav">
                 <li><a href="/">Home</a></li>
                 <li><a href="/barChart">Bar Chart</a></li>
-                <li><a href="/smallMultiple">Small Multiple</a></li>
+                <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="/"> Small Multiple <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li><a href="/smallMultiple">Basic</a></li>
+                    <li><a href="/smallMultipleZoomInOne">With Zoom into One</a></li>
+                </ul>
+                </li>
                 <li class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#"> Choropleth <b class="caret"></b></a>
                 <ul class="dropdown-menu">
