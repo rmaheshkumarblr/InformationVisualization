@@ -64,6 +64,12 @@ def tagCloud():
 def linkedView():
     return render_template('linkedView.html')
 
+@app.route("/linkedViewWithRangeAndScale")
+def linkedViewWithRangeAndScale():
+    return render_template('linkedViewWithRangeAndScale.html')
+
+
+
 @app.route("/boxPlotCalc")
 def boxPlotCalc():
     bList = []
@@ -271,6 +277,30 @@ def reasonForAccident(year):
             if row[9] == "Aboard":
                 continue
             if row[0].split(",")[1].strip() == year and row[12] != "?" :
+                content += " " + row[12]
+        content = content.lower()
+        # print content
+        content = re.sub(r'[^\w\s]','',content)
+        countVectorizerOutput = CountVectorizer(stop_words='english').build_analyzer()(str(content.replace("\n"," ").split(" ")))
+        # print Counter(countVectorizerOutput).most_common()
+        # for key,value in Counter(countVectorizerOutput).items():
+        #     if value > 5:
+        #         keyWords = {"text":key, "size":value };
+        #         result.append(keyWords);
+        result = [{'text':key, 'size':value} for key,value in Counter(countVectorizerOutput).most_common(50)]
+    return jsonify(result)
+
+
+@app.route("/reasonForAccidentYearsRange/<year1>/<year2>")
+def reasonForAccidentYearsRange(year1,year2):
+    content = ""
+    result = []
+    with open('static/data/data.csv', 'rb') as csvfile:
+        dataReader = csv.reader(csvfile, delimiter=',')
+        for row in dataReader:
+            if row[9] == "Aboard":
+                continue
+            if row[0].split(",")[1].strip() >= year1 and row[0].split(",")[1].strip() <= year2 and row[12] != "?" :
                 content += " " + row[12]
         content = content.lower()
         # print content

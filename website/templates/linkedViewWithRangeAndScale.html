@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('.static', filename='js/jquery-1.12.4.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/jquery-ui.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/topojson.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.geomap.dependencies.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.geomap.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.layout.cloud.js')}}" charset="utf-8"></script>
+
+{% endblock %}
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='css/jquery-ui.css')}}">
+<link rel="stylesheet" href="{{url_for('.static', filename='css/d3.geomap.css')}}">
+{% endblock %}
+
+
+{% block page_content %}
+
+<center>
+<div id ="choropleth"></div>
+
+
+<div id="map"></div>
+
+<fieldset>
+    <!-- <legend>Scale</legend> -->
+    <label for="radio-1">Linear</label>
+    <input type="radio" name="radio-1" id="radio-1" value="linear" checked="true">
+    <label for="radio-2">Log</label>
+    <input type="radio" name="radio-1" id="radio-2" value="log">
+</fieldset>
+
+<p>
+  <label for="amount">No of accidents between: </label>
+  <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;">
+</p>
+
+<div id="slider-range"></div>
+
+<div id ="tagCloud" class="col-md-12"></div>
+</center>
+<script type="text/javascript">
+
+// $( function() {
+//   var select = $( "#year" );
+//   var slider = $( "<div id='slider'></div>" ).insertAfter( select ).slider({
+//     min: 1,
+//     max: 109,
+//     range: "min",
+//     value: select[ 0 ].selectedIndex + 1,
+//     slide: function( event, ui ) {
+//       // console.log(ui.value - 1 + 1908)
+//       reloadMap(ui.value - 1 + 1908)
+//       getKeyWords(ui.value - 1 + 1908)
+//       select[ 0 ].selectedIndex = ui.value - 1;
+//     }
+//   });
+//   $( "#year" ).on( "change", function() {
+//     // console.log(this.selectedIndex + 1908)
+//     reloadMap(this.selectedIndex + 1908)
+//     getKeyWords(this.selectedIndex + 1908)
+//     slider.slider( "value", this.selectedIndex + 1 );
+//   });
+// } );
+
+minValue = 1908
+maxValue = 2016
+overallData = ""
+$(
+  function() 
+  {
+    $("#slider-range").slider({
+      range: true,
+      min: 1908,
+      max: 2016,
+      values: [ 1908, 2016 ],
+      slide: function( event, ui ) 
+      {
+        minValue = ui.values[ 0 ];
+        maxValue = ui.values[ 1 ];
+        $( "#amount" ).val( "" + minValue+ " - " + maxValue );
+        // barChartWithMinMaxValue(overallData,minValue,maxValue)
+        reloadMap(minValue,maxValue)
+        getKeyWords(minValue,maxValue)
+        // console.log('Min Value: ' + minValue + ", MaxValue: " + maxValue);
+      }
+    });
+    
+    $("#amount" ).val( "" + $( "#slider-range" ).slider( "values", 0 ) +
+      " - " + $( "#slider-range" ).slider( "values", 1 ) );
+
+    
+  } 
+);
+
+
+var format = function(d) {
+    d = d / 1000000;
+    return d3.format(',.02f')(d) + 'M';
+}
+
+var map = d3.geomap.choropleth()
+    .geofile('static/js/countries.json')
+    .colors(colorbrewer.YlGnBu[9])
+    .column('numberofaccidents')
+    .legend(true)
+    .unitId('country')
+    .duration(500)
+    .postUpdate(annotation);
+
+// reloadMap(1908)
+// getKeyWords(1908)
+
+reloadMap(1908,2016)
+getKeyWords(1908,2016)
+
+$('input[name=radio-1]').change(function()
+{
+    reloadMap(minValue,maxValue)
+    getKeyWords(minValue,maxValue)
+}
+);
+
+function reloadMap(year1,year2)
+{
+    //console.log(year1,year2)
+    d3.csv('/yearsVsAccidentsAreaCumulative/'+year1+'/'+year2+'.csv', function(error, data) {
+        // console.log(data)
+
+        if ( $('input[name=radio-1]:checked').val() == "log" )
+        {
+            function convertToLogScale(element)
+            {
+                element['numberofaccidents'] =  String(Math.log(element['numberofaccidents'] + 0.01) + 4.61 )
+            }
+            data.forEach(convertToLogScale)
+        }
+
+        
+        // console.log(data)
+
+        d3.selectAll("svg").remove();
+
+        d3.select('#map')
+          .datum(data)
+          .call(map.draw, map);
+
+        $('#choropleth').html("<center><h4> Choropleth - Number of accidents between the year: " + year1 + " and " +  year2 + "</h4></center>");
+    });  
+} 
+
+// function reloadMap(year)
+// {
+//     d3.csv('/yearVsAccidentsArea/'+year+'.csv', function(error, data) {
+//         // console.log(data)
+
+//         d3.selectAll("svg").remove();
+
+//         d3.select('#map')
+//           .datum(data)
+//           .call(map.draw, map);
+
+//         $('#choropleth').html("<center><h4> Choropleth - Number of accidents for the year: " + year + " </h4></center>");
+//     });  
+// } 
+
+function annotation() {
+     
+}
+
+
+
+function getKeyWords(year1,year2)
+{
+
+  d3.json("/reasonForAccidentYearsRange/"+year1+"/"+year2, function(error, data) {
+
+    if (error) return console.warn(error);
+
+    var max = d3.max(data, function(d) { return d.size; });
+    // var min = d3.min(data, function(d) { return d.size; });
+    var magnify = d3.scale.linear()
+              .domain([0, max])
+              .range([0, 100]);
+
+    // console.log(min,max)
+    frequency_list = data
+    // console.log(frequency_list)
+    // d3.selectAll("svg").remove();
+
+    var color = d3.scale.linear()
+              .domain([0,1,2,3,4,5,6,10,15,20,100])
+              .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555"  , "#444", "#333", "#222"]);
+  
+      d3.layout.cloud().size([950, 200])
+              .words(frequency_list)
+              .rotate(0)
+              .fontSize(function(d) { return magnify(d.size); })
+              .on("end", draw)
+              .start();
+  
+      function draw(words) {
+          d3.select("#tagCloud").append("svg")
+                  .attr("width", 1000)
+                  .attr("height", 225)
+                  .attr("class", "wordcloud")
+                  .append("g")
+                  // without the transform, words words would get cutoff to the left and  top, they would
+                  // appear outside of the SVG area
+                  .attr("transform", "translate(320,150)")
+                  .selectAll("text")
+                  .data(words)
+                  .enter().append("text")
+                  .style("font-size", function(d) { return d.size + "px"; })
+                  .style("fill", function(d, i) { return color(i); })
+                  .attr("transform", function(d) {
+                      return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                  })
+                  .text(function(d) { return d.text; });
+      }
+  
+    });
+}
+
+</script>
+
+
+
+{% endblock %}
