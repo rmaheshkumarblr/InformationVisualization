@@ -197,11 +197,11 @@ function reloadMap(year)
 {
     d3.csv('/yearVsAccidentsAreaCumulative/'+year+'.csv', function(error, data) {
         // console.log(data)
-        // function convertToLogScale(element)
-        // {
-        //     element['numberofaccidents'] =  String(Math.log(element['numberofaccidents'] + 0.01) + 4.61 )
-        // }
-        // data.forEach(convertToLogScale)
+        function convertToLogScale(element)
+        {
+            element['numberofaccidents'] =  String(Math.log(element['numberofaccidents'] + 0.01) + 4.61 )
+        }
+        data.forEach(convertToLogScale)
         // console.log(data)
 
         d3.selectAll("svg").remove();
