@@ -1,2 +1,4 @@
 Flask==0.11.1
 Flask-Bootstrap==3.3.5.7
+pycountry==16.10.23rc3
+sklearn==0.0

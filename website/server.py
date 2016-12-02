@@ -55,6 +55,10 @@ def choroplethCumulativeLogScale():
 def choroplethSelectRangeCumulativeLogScale():
     return render_template('choroplethSelectRangeCumulativeLogScale.html')
 
+@app.route("/linkedViewWithRangeAndScaleAndPieChart")
+def linkedViewWithRangeAndScaleAndPieChart():
+    return render_template('linkedViewWithRangeAndScaleAndPieChart.html')
+
 
 @app.route("/tagCloud")
 def tagCloud():
@@ -314,6 +318,31 @@ def reasonForAccidentYearsRange(year1,year2):
         result = [{'text':key, 'size':value} for key,value in Counter(countVectorizerOutput).most_common(50)]
     return jsonify(result)
 
+@app.route("/fatalitiesAboard/<year1>/<year2>")
+def fatalitiesAboard(year1,year2):
+    aboard = 0
+    fatalities = 0  
+    result = []
+    with open('static/data/data.csv', 'rb') as csvfile:
+        dataReader = csv.reader(csvfile, delimiter=',')
+        for row in dataReader:
+            if row[9] == "Aboard":
+                continue
+            if row[0].split(",")[1].strip() >= year1 and row[0].split(",")[1].strip() <= year2 and row[9] != "?" and row[10] != "?" :
+                aboard += int(row[9])
+                fatalities += int(row[10])
+        
+        # print content
+        # content = re.sub(r'[^\w\s]','',content)
+        # countVectorizerOutput = CountVectorizer(stop_words='english').build_analyzer()(str(content.replace("\n"," ").split(" ")))
+        # print Counter(countVectorizerOutput).most_common()
+        # for key,value in Counter(countVectorizerOutput).items():
+        #     if value > 5:
+        #         keyWords = {"text":key, "size":value };
+        #         result.append(keyWords);
+        # result = [{'text':key, 'size':value} for key,value in Counter(countVectorizerOutput).most_common(50)]
+        result = [{'fatalities': fatalities , 'aboard': aboard } ]
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(port=8001,debug=True)
