@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    {{ super() }}
+   
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="https://code.highcharts.com/modules/heatmap.js"></script>
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+
+
+
+{% endblock %}
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='css/jquery-ui.css')}}">
+{% endblock %}
+
+{% block page_content %}
+
+<div id="container" style="height: 400px; min-width: 310px; max-width: 800px; margin: 0 auto"></div>
+
+<script>
+$(function () {
+	var url =  "/CalendarHeatMapCummalativeCalc"
+	
+	$.getJSON(url, function(statsdata) {
+        var arr = statsdata
+        var listofDays = [];
+   		 var listofCounts = [];
+        for (var i = 0; i < arr.length; i++){
+            var obj = arr[i];
+            //console.log(obj["boxplotstats"])
+            listofDays.push(obj["day"])
+            //console.log(obj["counts"])
+
+            for(var j=0;j<obj["counts"].length; j++)
+            	listofCounts.push(obj["counts"][j])
+
+        }
+
+     //   console.log(listofDays);
+   // console.log(listofCounts);
+    Highcharts.chart('container', {
+
+        chart: {
+            type: 'heatmap',
+            marginTop: 40,
+            marginBottom: 80,
+            plotBorderWidth: 1
+        },
+
+
+        title: {
+            text: 'Plane crashes per weekday'
+        },
+
+        xAxis: {
+            categories: ['1920','1930','1940','1950','1960','1970','1980','1990','2000','2015']
+        },
+
+        yAxis: {
+            categories: listofDays,
+            title: null
+        },
+
+        colorAxis: {
+            min: 0,
+            minColor: '#FFFFFF',
+            maxColor:  Highcharts.getOptions().colors[1]
+        },
+
+        legend: {
+            align: 'right',
+            layout: 'vertical',
+            margin: 0,
+            verticalAlign: 'top',
+            y: 25,
+            symbolHeight: 280
+        },
+
+        tooltip: {
+            formatter: function () {
+                return '<b>' + this.point.value  + '</b> planes crashed on <br><b>' +  this.series.yAxis.categories[this.point.y]
+                    + '</b> in <br><b>' +  this.series.xAxis.categories[this.point.x] + '</b>';
+            }
+        },
+
+        series: [{
+            name: 'Plane Crashes per day',
+            borderWidth: 1,
+            data: listofCounts,
+            dataLabels: {
+                enabled: false,
+                color: '#000000'
+            }
+        }]
+
+    });
+
+    });
+
+	
+});
+</script>
+{% endblock %}

@@ -137,9 +137,44 @@ def generateBoxPlotStats(listType):
     statList.append(maxValue)
     return statList
 
-@app.route("/CalendarHeatMap")
-def CalendarHeatMap():
-    return render_template("calendar_heatmap.html")
+@app.route("/CalendarHeatMapGround")
+def CalendarHeatMapGround():
+    return render_template("calendarHeatMapGround.html")
+
+@app.route("/CalendarHeatMapCummalative")
+def CalendarHeatMapCummalative():
+    return render_template("CalendarHeatMapCummalative.html")
+
+@app.route("/CalendarHeatMapCummalativeCalc")
+def CalendarHeatMapCummalativeCalc():
+
+    with open('static/data/input_heatmap.csv', 'rb') as csvfile:
+        outputList = []
+        dayList = []
+        i =-1
+        j=0
+
+        dataReader = csv.reader(csvfile, delimiter=',')
+        cnt = Counter()
+        for row in dataReader:
+            outputList = []
+
+            i = i+1
+            if i==7:
+                break
+            
+            dayList.append(row[0])
+            for j in range(0,10):
+                tempList = []
+                tempList.append(j)
+                tempList.append(i)
+                tempList.append(int(row[j+1]))
+                outputList.append(tempList)
+                #print i, j, row[j+1]
+
+            cnt[row[0]] = outputList
+    result = [{'day':key, 'counts':value} for key,value in cnt.items()]
+    return jsonify(result)
 
 @app.route("/CalendarHeatMapGroundType")
 def CalendarHeatMapGroundType():
