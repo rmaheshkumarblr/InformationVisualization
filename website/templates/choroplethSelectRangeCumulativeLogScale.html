@@ -9,6 +9,7 @@
     <script src="{{url_for('.static', filename='js/topojson.min.js')}}" charset="utf-8"></script>
     <script src="{{url_for('.static', filename='js/d3.geomap.dependencies.min.js')}}" charset="utf-8"></script>
     <script src="{{url_for('.static', filename='js/d3.geomap.min.js')}}" charset="utf-8"></script>
+    
 
 {% endblock %}
 {% block styles %}
@@ -22,10 +23,25 @@
 
 <div id ="choropleth"></div>
 
-
 <div id="map"></div>
 
-<form id="numberOfAccidnets">
+<fieldset>
+    <!-- <legend>Scale</legend> -->
+    <label for="radio-1">Linear</label>
+    <input type="radio" name="radio-1" id="radio-1" value="linear" checked="true">
+    <label for="radio-2">Log</label>
+    <input type="radio" name="radio-1" id="radio-2" value="log">
+</fieldset>
+
+<p>
+  <label for="amount">No of accidents between: </label>
+  <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;">
+</p>
+
+<div id="slider-range"></div>
+
+
+<!-- <form id="numberOfAccidents">
   <label for="year">Select the Year</label>
   <select name="year" id="year">
     <option>1908</option>
@@ -138,29 +154,74 @@
     <option>2015</option>
     <option>2016</option>
   </select>
-</form>
+</form> -->
+
+<script type="text/javascript">
+    $( document ).ready(function() {
+      // Handler for .ready() called.
+      // $( "input" ).checkboxradio({
+      //     icon: false
+      //   });
+    });
+</script>
 
 <script type="text/javascript">
 
-$( function() {
-  var select = $( "#year" );
-  var slider = $( "<div id='slider'></div>" ).insertAfter( select ).slider({
-    min: 1,
-    max: 109,
-    range: "min",
-    value: select[ 0 ].selectedIndex + 1,
-    slide: function( event, ui ) {
-      // console.log(ui.value - 1 + 1908)
-      reloadMap(ui.value - 1 + 1908)
-      select[ 0 ].selectedIndex = ui.value - 1;
-    }
-  });
-  $( "#year" ).on( "change", function() {
-    // console.log(this.selectedIndex + 1908)
-    reloadMap(this.selectedIndex + 1908)
-    slider.slider( "value", this.selectedIndex + 1 );
-  });
-} );
+
+// $( function() {
+//     $( "input" ).checkboxradio({
+//       icon: false
+//     });
+//   } );
+
+minValue = 1908
+maxValue = 2016
+overallData = ""
+$(
+  function() 
+  {
+    $("#slider-range").slider({
+      range: true,
+      min: 1908,
+      max: 2016,
+      values: [ 1908, 2016 ],
+      slide: function( event, ui ) 
+      {
+        minValue = ui.values[ 0 ];
+        maxValue = ui.values[ 1 ];
+        $( "#amount" ).val( "" + minValue+ " - " + maxValue );
+        // barChartWithMinMaxValue(overallData,minValue,maxValue)
+        reloadMap(minValue,maxValue)
+        // console.log('Min Value: ' + minValue + ", MaxValue: " + maxValue);
+      }
+    });
+    
+    $("#amount" ).val( "" + $( "#slider-range" ).slider( "values", 0 ) +
+      " - " + $( "#slider-range" ).slider( "values", 1 ) );
+
+    
+  } 
+);
+
+// $( function() {
+//   var select = $( "#year" );
+//   var slider = $( "<div id='slider'></div>" ).insertAfter( select ).slider({
+//     min: 1,
+//     max: 109,
+//     range: "min",
+//     value: select[ 0 ].selectedIndex + 1,
+//     slide: function( event, ui ) {
+//       // console.log(ui.value - 1 + 1908)
+//       reloadMap(ui.value - 1 + 1908)
+//       select[ 0 ].selectedIndex = ui.value - 1;
+//     }
+//   });
+//   $( "#year" ).on( "change", function() {
+//     // console.log(this.selectedIndex + 1908)
+//     reloadMap(this.selectedIndex + 1908)
+//     slider.slider( "value", this.selectedIndex + 1 );
+//   });
+// } );
 
 
 var format = function(d) {
@@ -191,17 +252,31 @@ var map = d3.geomap.choropleth()
 //     .call(map.draw, map);
 // });
 
-reloadMap(1908)
+reloadMap(1908,2016)
 
-function reloadMap(year)
+
+$('input[name=radio-1]').change(function()
 {
-    d3.csv('/yearVsAccidentsAreaCumulative/'+year+'.csv', function(error, data) {
+    reloadMap(minValue,maxValue)
+}
+);
+
+function reloadMap(year1,year2)
+{
+    //console.log(year1,year2)
+    d3.csv('/yearsVsAccidentsAreaCumulative/'+year1+'/'+year2+'.csv', function(error, data) {
         // console.log(data)
-        // function convertToLogScale(element)
-        // {
-        //     element['numberofaccidents'] =  String(Math.log(element['numberofaccidents'] + 0.01) + 4.61 )
-        // }
-        // data.forEach(convertToLogScale)
+
+        if ( $('input[name=radio-1]:checked').val() == "log" )
+        {
+            function convertToLogScale(element)
+            {
+                element['numberofaccidents'] =  String(Math.log(element['numberofaccidents'] + 0.01) + 4.61 )
+            }
+            data.forEach(convertToLogScale)
+        }
+
+        
         // console.log(data)
 
         d3.selectAll("svg").remove();
@@ -210,7 +285,7 @@ function reloadMap(year)
           .datum(data)
           .call(map.draw, map);
 
-        $('#choropleth').html("<center><h4> Choropleth - Number of accidents till the year: " + year + " </h4></center>");
+        $('#choropleth').html("<center><h4> Choropleth - Number of accidents between the year: " + year1 + " and " +  year2 + "</h4></center>");
     });  
 } 
 

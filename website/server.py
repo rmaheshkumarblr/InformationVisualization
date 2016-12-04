@@ -48,6 +48,19 @@ def choropleth():
 def choroplethCumulative():
     return render_template('choroplethCumulative.html')
 
+@app.route("/choroplethCumulativeLogScale")
+def choroplethCumulativeLogScale():
+    return render_template('choroplethCumulativeLogScale.html')
+
+@app.route("/choroplethSelectRangeCumulativeLogScale")
+def choroplethSelectRangeCumulativeLogScale():
+    return render_template('choroplethSelectRangeCumulativeLogScale.html')
+
+@app.route("/linkedViewWithRangeAndScaleAndPieChart")
+def linkedViewWithRangeAndScaleAndPieChart():
+    return render_template('linkedViewWithRangeAndScaleAndPieChart.html')
+
+
 @app.route("/tagCloud")
 def tagCloud():
     return render_template('tagCloud.html')
@@ -55,6 +68,12 @@ def tagCloud():
 @app.route("/linkedView")
 def linkedView():
     return render_template('linkedView.html')
+
+@app.route("/linkedViewWithRangeAndScale")
+def linkedViewWithRangeAndScale():
+    return render_template('linkedViewWithRangeAndScale.html')
+
+
 
 @app.route("/boxPlotCalc")
 def boxPlotCalc():
@@ -258,6 +277,33 @@ def yearVsAccidentsAreaCumulative(year):
     return Response(generate(), mimetype='text/csv')
 
 
+@app.route("/yearsVsAccidentsAreaCumulative/<year1>/<year2>.csv")
+def yearsVsAccidentsAreaCumulative(year1,year2):
+    # print year1, year2
+    # year1 = year1.split("-")[0]
+    # year2 = year1.split("-")[1]
+    cnt = Counter()
+    with open('static/data/data.csv', 'rb') as csvfile:
+        dataReader = csv.reader(csvfile, delimiter=',')
+        for row in dataReader:
+            if row[9] == "Aboard":
+                continue
+            if row[0].split(",")[1].strip() >= year1 and row[0].split(",")[1].strip() <= year2 and row[15] != "ERR:15:no country code found" and row[15] != "?" :
+                cnt[row[15]] += 1
+    countriesPresent = [];
+    def generate():
+        yield "country" + "," + "numberofaccidents" + "\n"
+        for key,value in cnt.items():
+            if key in countries_alpha2:
+                countriesPresent.append(pycountry.countries.get(alpha_2=key).alpha_3)
+                yield pycountry.countries.get(alpha_2=key).alpha_3 + "," + str(value) + "\n"
+        for country in countries:
+            if country not in countriesPresent:
+                yield country + "," + str(0) + "\n"
+    return Response(generate(), mimetype='text/csv')
+
+
+
 @app.route("/reasonForAccident/<year>")
 def reasonForAccident(year):
     content = ""
@@ -281,6 +327,55 @@ def reasonForAccident(year):
         result = [{'text':key, 'size':value} for key,value in Counter(countVectorizerOutput).most_common(50)]
     return jsonify(result)
 
+
+@app.route("/reasonForAccidentYearsRange/<year1>/<year2>")
+def reasonForAccidentYearsRange(year1,year2):
+    content = ""
+    result = []
+    with open('static/data/data.csv', 'rb') as csvfile:
+        dataReader = csv.reader(csvfile, delimiter=',')
+        for row in dataReader:
+            if row[9] == "Aboard":
+                continue
+            if row[0].split(",")[1].strip() >= year1 and row[0].split(",")[1].strip() <= year2 and row[12] != "?" :
+                content += " " + row[12]
+        content = content.lower()
+        # print content
+        content = re.sub(r'[^\w\s]','',content)
+        countVectorizerOutput = CountVectorizer(stop_words='english').build_analyzer()(str(content.replace("\n"," ").split(" ")))
+        # print Counter(countVectorizerOutput).most_common()
+        # for key,value in Counter(countVectorizerOutput).items():
+        #     if value > 5:
+        #         keyWords = {"text":key, "size":value };
+        #         result.append(keyWords);
+        result = [{'text':key, 'size':value} for key,value in Counter(countVectorizerOutput).most_common(50)]
+    return jsonify(result)
+
+@app.route("/fatalitiesAboard/<year1>/<year2>")
+def fatalitiesAboard(year1,year2):
+    aboard = 0
+    fatalities = 0  
+    result = []
+    with open('static/data/data.csv', 'rb') as csvfile:
+        dataReader = csv.reader(csvfile, delimiter=',')
+        for row in dataReader:
+            if row[9] == "Aboard":
+                continue
+            if row[0].split(",")[1].strip() >= year1 and row[0].split(",")[1].strip() <= year2 and row[9] != "?" and row[10] != "?" :
+                aboard += int(row[9])
+                fatalities += int(row[10])
+        
+        # print content
+        # content = re.sub(r'[^\w\s]','',content)
+        # countVectorizerOutput = CountVectorizer(stop_words='english').build_analyzer()(str(content.replace("\n"," ").split(" ")))
+        # print Counter(countVectorizerOutput).most_common()
+        # for key,value in Counter(countVectorizerOutput).items():
+        #     if value > 5:
+        #         keyWords = {"text":key, "size":value };
+        #         result.append(keyWords);
+        # result = [{'text':key, 'size':value} for key,value in Counter(countVectorizerOutput).most_common(50)]
+        result = [{'fatalities': fatalities , 'aboard': aboard } ]
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(port=8001,debug=True)

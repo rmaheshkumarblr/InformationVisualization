@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    {{ super() }}
+    <script src="{{url_for('.static', filename='js/jquery-1.12.4.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/jquery-ui.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/topojson.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.geomap.dependencies.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.geomap.min.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/d3.layout.cloud.js')}}" charset="utf-8"></script>
+    <script src="{{url_for('.static', filename='js/jquery.tipsy.js')}}" charset="utf-8"></script>
+
+{% endblock %}
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='css/jquery-ui.css')}}">
+<link rel="stylesheet" href="{{url_for('.static', filename='css/d3.geomap.css')}}">
+<link rel="stylesheet" href="{{url_for('.static', filename='css/tipsy.css')}}">
+{% endblock %}
+
+
+{% block page_content %}
+
+<center>
+<div id ="choropleth"></div>
+
+
+<div id="map"></div>
+
+<fieldset>
+    <!-- <legend>Scale</legend> -->
+    <label for="radio-1">Linear</label>
+    <input type="radio" name="radio-1" id="radio-1" value="linear" checked="true">
+    <label for="radio-2">Log</label>
+    <input type="radio" name="radio-1" id="radio-2" value="log">
+</fieldset>
+
+<p>
+  <label for="amount">No of accidents between: </label>
+  <input type="text" id="amount" readonly style="border:0; color:#f6931f; font-weight:bold;">
+</p>
+
+<div id="slider-range"></div>
+<br>
+<div id ="tagCloud" class="col-md-9"></div>
+<div id ="pieChart" class="col-md-3"></div>
+</center>
+<script type="text/javascript">
+
+minValue = 1908
+maxValue = 2016
+overallData = ""
+$(
+  function() 
+  {
+    $("#slider-range").slider({
+      range: true,
+      min: 1908,
+      max: 2016,
+      values: [ 1908, 2016 ],
+      slide: function( event, ui ) 
+      {
+        minValue = ui.values[ 0 ];
+        maxValue = ui.values[ 1 ];
+        $( "#amount" ).val( "" + minValue+ " - " + maxValue );
+        // barChartWithMinMaxValue(overallData,minValue,maxValue)
+        reloadMap(minValue,maxValue)
+        getKeyWords(minValue,maxValue)
+        pieChart(minValue,maxValue)
+        // console.log('Min Value: ' + minValue + ", MaxValue: " + maxValue);
+      }
+    });
+    
+    $("#amount" ).val( "" + $( "#slider-range" ).slider( "values", 0 ) +
+      " - " + $( "#slider-range" ).slider( "values", 1 ) );
+
+    
+  } 
+);
+
+
+var format = function(d) {
+    d = d / 1000000;
+    return d3.format(',.02f')(d) + 'M';
+}
+
+var map = d3.geomap.choropleth()
+    .geofile('static/js/countries.json')
+    .colors(colorbrewer.YlGnBu[9])
+    .column('numberofaccidents')
+    .legend(true)
+    .unitId('country')
+    .duration(500)
+    .postUpdate(annotation);
+
+// reloadMap(1908)
+// getKeyWords(1908)
+
+reloadMap(1908,2016)
+getKeyWords(1908,2016)
+pieChart(1908,2016)
+
+$('input[name=radio-1]').change(function()
+{
+    reloadMap(minValue,maxValue)
+    getKeyWords(minValue,maxValue)
+    pieChart(minValue,maxValue)
+}
+);
+
+function reloadMap(year1,year2)
+{
+    //console.log(year1,year2)
+    d3.csv('/yearsVsAccidentsAreaCumulative/'+year1+'/'+year2+'.csv', function(error, data) {
+        // console.log(data)
+
+        if ( $('input[name=radio-1]:checked').val() == "log" )
+        {
+            function convertToLogScale(element)
+            {
+                element['numberofaccidents'] =  String(Math.log(element['numberofaccidents'] + 0.01) + 4.61 )
+            }
+            data.forEach(convertToLogScale)
+        }
+
+        
+        // console.log(data)
+
+        d3.selectAll("svg").remove();
+
+        d3.select('#map')
+          .datum(data)
+          .call(map.draw, map);
+
+        $('#choropleth').html("<center><h4> Choropleth - Number of accidents between the year: " + year1 + " and " +  year2 + "</h4></center>");
+    });  
+} 
+
+function annotation() {
+     
+}
+
+
+
+function getKeyWords(year1,year2)
+{
+
+  d3.json("/reasonForAccidentYearsRange/"+year1+"/"+year2, function(error, data) {
+
+    if (error) return console.warn(error);
+
+    var max = d3.max(data, function(d) { return d.size; });
+    // var min = d3.min(data, function(d) { return d.size; });
+    var magnify = d3.scale.linear()
+              .domain([0, max])
+              .range([0, 100]);
+
+    // console.log(min,max)
+    frequency_list = data
+    // console.log(frequency_list)
+    // d3.selectAll("svg").remove();
+
+    var color = d3.scale.linear()
+              .domain([0,1,2,3,4,5,6,10,15,20,100])
+              .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555"  , "#444", "#333", "#222"]);
+  
+      d3.layout.cloud().size([950, 150])
+              .words(frequency_list)
+              .rotate(0)
+              .fontSize(function(d) { return magnify(d.size); })
+              .on("end", draw)
+              .start();
+  
+      function draw(words) {
+          d3.select("#tagCloud").append("svg")
+                  .attr("width", 700)
+                  .attr("height", 200)
+                  .attr("class", "wordcloud")
+                  .append("g")
+                  // without the transform, words words would get cutoff to the left and  top, they would
+                  // appear outside of the SVG area
+                  .attr("transform", "translate(320,150)")
+                  .selectAll("text")
+                  .data(words)
+                  .enter().append("text")
+                  .style("font-size", function(d) { return d.size + "px"; })
+                  .style("fill", function(d, i) { return color(i); })
+                  .attr("transform", function(d) {
+                      return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                  })
+                  .text(function(d) { return d.text; });
+      }
+  
+    });
+}
+
+function pieChart(year1, year2)
+{
+
+  var data = [];
+
+  d3.json("/fatalitiesAboard/"+year1+"/"+year2, function(error, result) {
+
+    // console.log(result)
+    if (error) throw error;
+
+    content1 = {}
+    content2 = {}
+
+    content1['label'] = 'Survivors'
+    content1['value'] = parseInt(result[0]['aboard'] - result[0]['fatalities'])
+    content1['aboard'] = parseInt(result[0]['aboard'])
+
+    content2['label'] = 'Fatalities'
+    content2['value'] = parseInt(result[0]['fatalities'])
+    content2['aboard'] = parseInt(result[0]['aboard'])
+
+    data.push(content1)
+    data.push(content2)
+
+    // console.log(data)
+
+    var w = 300,                        //width
+    h = 200,                            //height
+    r = 100,                            //radius
+    color = d3.scale.category20c();     //builtin range of colors
+
+      var vis = d3.select("#pieChart")
+        .append("svg:svg")              //create the SVG element inside the <body>
+        .data([data])                   //associate our data with the document
+            .attr("width", w)           //set the width and height of our visualization (these will be attributes of the <svg> tag
+            .attr("height", h)
+        .append("svg:g")                //make a group to hold our pie chart
+            .attr("transform", "translate(" + r + "," + r + ")")    //move the center of the pie chart from 0, 0 to radius, radius
+    var arc = d3.svg.arc()              //this will create <path> elements for us using arc data
+        .outerRadius(r);
+    var pie = d3.layout.pie()           //this will create arc data for us given a list of values
+        .value(function(d) { return d.value; });    //we must tell it out to access the value of each element in our data array
+    var arcs = vis.selectAll("g.slice")     //this selects all <g> elements with class slice (there aren't any yet)
+        .data(pie)                          //associate the generated pie data (an array of arcs, each having startAngle, endAngle and value properties) 
+        .enter()                            //this will create <g> elements for every "extra" data element that should be associated with a selection. The result is creating a <g> for every object in the data array
+            .append("svg:g")                //create a group to hold each slice (we will have a <path> and a <text> element associated with each slice)
+                .attr("class", "slice");    //allow us to style things in the slices (like text)
+        arcs.append("svg:path")
+                .attr("fill", function(d, i) 
+                { 
+                  if ( d.data.label == "Survivors" )
+                  {
+                    return "#00FF00";
+                  }
+                  else
+                  {
+                    return "#FF0000";
+                  }
+                  // console.log(d.data.label)
+                  // return color(i); 
+                } ) //set the color for each slice to be chosen from the color function defined above
+                .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
+        arcs.append("svg:text")                                     //add a label to each slice
+                .attr("transform", function(d) {                    //set the label's origin to the center of the arc
+                //we have to make sure to set these before calling arc.centroid
+                d.innerRadius = 0;
+                d.outerRadius = r;
+                return "translate(" + arc.centroid(d) + ")";        //this gives us a pair of coordinates like [50, 50]
+                })
+                .attr("text-anchor", "middle")                          //center the text on it's origin
+                .text(function(d, i) { return data[i].label + ":" + parseFloat(data[i].value/data[i].aboard).toFixed(2)*100 +     "%"; }) ;       //get the label from our original data array
+                // .append("svg:title")
+                // .text(function(d, i) { return data[i].label + ": " + parseFloat(data[i].value/data[i].aboard).toFixed(2)*100 + "%"; });  
+        $('g.slice').tipsy({ 
+          gravity: 'w', 
+          html: true, 
+          title: function() {
+            // console.log(this.__data__ )
+            // var d = this.__data__, c = colors(d.i);
+            // return 'Hi there! My color is <span style="color:' + c + '">' + c + '</span>'; 
+            // return "Hello Mahesh"
+            return this.__data__.data.label + ": " + this.__data__.data.value
+          }
+        });
+
+
+  });  
+}
+  
+
+
+</script>
+
+
+
+{% endblock %}

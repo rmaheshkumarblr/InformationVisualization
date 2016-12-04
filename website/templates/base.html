@@ -25,17 +25,32 @@ data    -toggle="collapse" data-target=".navbar-collapse">
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li><a href="/">Home</a></li>
+                <!-- <li><a href="/">Home</a></li> -->
                 <li><a href="/barChart">Bar Chart</a></li>
-                <li><a href="/smallMultiple">Small Multiple</a></li>
+                <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="/"> Small Multiple <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li><a href="/smallMultiple">Basic</a></li>
+                    <li><a href="/smallMultipleZoomInOne">With Zoom into One</a></li>
+                </ul>
+                </li>
                 <li class="dropdown">
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#"> Choropleth <b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   <li><a href="/choropleth">Choropleth</a></li>
                   <li><a href="/choroplethCumulative">Choropleth Cumulative</a></li>
+                  <li><a href="/choroplethCumulativeLogScale">Choropleth Cumulative Log Scale</a></li>
+                  <li><a href="/choroplethSelectRangeCumulativeLogScale"> Choropleth Select Range of Years </a> </li>
                 </ul>
                 <li><a href="/tagCloud">Tag Cloud</a></li>
-                <li><a href="/linkedView">Linked View</a></li>
+                <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#"> Linked View <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href="/linkedView">Linked View</a></li>
+                  <li><a href="/linkedViewWithRangeAndScale">Linked View with Range and Scale</a></li>
+                  <li><a href="/linkedViewWithRangeAndScaleAndPieChart">Linked View with Range, Scale and Pie Chart</a></li>
+                </ul>
+                
                 <li><a href="/boxPlot">Box Plot</a></li>
                 <li><a href="/CalendarHeatMap"> Calendar Heat Map </a> </li>
             </ul>
