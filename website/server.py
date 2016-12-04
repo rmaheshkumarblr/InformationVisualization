@@ -6,6 +6,7 @@ import csv
 import sklearn
 from sklearn.feature_extraction.text import CountVectorizer
 import re
+import json
 import numpy as np
 
 # Get list of all the countries in the ISO-Alpha3 format
@@ -93,8 +94,6 @@ def boxPlotCalc():
     result = [{'TypeOfFlight':key, 'boxplotstats':value} for key,value in cnt.items()]
     return jsonify(result)
 
-
-
 def generateBoxPlotStats(listType):
    
     listType.sort()
@@ -118,6 +117,40 @@ def generateBoxPlotStats(listType):
     statList.append(q3)
     statList.append(maxValue)
     return statList
+
+@app.route("/CalendarHeatMap")
+def CalendarHeatMap():
+    return render_template("calendar_heatmap.html")
+
+@app.route("/CalendarHeatMapGroundType")
+def CalendarHeatMapGroundType():
+    #print "yay"
+    fresult = ""
+    result1 = {}
+    cnt = Counter()
+    with open('static/data/calendar_heatmap_ground_output.csv', 'rb') as csvfile:
+        dataReader = csv.reader(csvfile, delimiter=',')
+        for row in dataReader:
+
+
+            if row[0] == 'Date':
+               # print "oops its date"
+                continue
+            #print row[0], row[1]
+            cnt[row[0]] = int(row[1])
+            result1['_id'] = row[0]
+            
+            result1['count'] = int(row[1])
+            fresult = fresult +json.dumps(result1) + "\n"
+            
+
+    result = [{'_id':key, 'count':value} for key,value in cnt.items()]
+    #print "cnt", cnt
+    print fresult
+    #print jsonify(result)
+    return jsonify(fresult.strip())
+        
+
 
 @app.route("/survivorsVsFlightType")
 def survivorsVsFlightType():
