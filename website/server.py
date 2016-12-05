@@ -243,7 +243,7 @@ def yearVsAccidents():
 
                 if(fatalities == "?"):
                     fatalities = 0
-                if(int(fatalities) == 0 ):
+                if(int(fatalities) <= 10 ):
                     fatalitiesNameBasedOnCount = 'nofatalities'
                 else:
                     fatalitiesNameBasedOnCount = 'fatalities'

@@ -259,9 +259,9 @@ $('.panel-body.overView').on('mouseenter', function(e){
             
             bubble_map.bubbles(dataToPlot, {
               popupTemplate: function(geo, data) {
-                // console.log(data)
+                console.log(data)
                 $('#container_summary').html("<center><h4> Summary </h4></center> <br> " + data ['   summary']);
-                return '<div class="hoverinfo">The Accident took place at: ' + data['location']  + '   . The operator was ' + data['operator'] + '. Fatalities:' + data['  fatalities'] +    '</div>'
+                return '<div class="hoverinfo">The Accident took place at: ' + data['location']  + '   . The operator was ' + data['operator'] + '. Fatalities:' + data['fatalities'] +    '</div>'
               }
             });
 

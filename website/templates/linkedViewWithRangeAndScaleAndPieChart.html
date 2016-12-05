@@ -166,7 +166,7 @@ function getKeyWords(year1,year2)
               .domain([0,1,2,3,4,5,6,10,15,20,100])
               .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555"  , "#444", "#333", "#222"]);
   
-      d3.layout.cloud().size([950, 150])
+      d3.layout.cloud().size([800, 150])
               .words(frequency_list)
               .rotate(0)
               .fontSize(function(d) { return magnify(d.size); })
@@ -176,7 +176,7 @@ function getKeyWords(year1,year2)
       function draw(words) {
           d3.select("#tagCloud").append("svg")
                   .attr("width", 700)
-                  .attr("height", 200)
+                  .attr("height", 180)
                   .attr("class", "wordcloud")
                   .append("g")
                   // without the transform, words words would get cutoff to the left and  top, they would
@@ -223,8 +223,8 @@ function pieChart(year1, year2)
     // console.log(data)
 
     var w = 300,                        //width
-    h = 200,                            //height
-    r = 100,                            //radius
+    h = 180,                            //height
+    r = 90,                            //radius
     color = d3.scale.category20c();     //builtin range of colors
 
       var vis = d3.select("#pieChart")
