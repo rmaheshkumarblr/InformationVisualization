@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+
+{% block head %}
+    {{ super() }}
+   
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+
+{% endblock %}
+
+
+{% block page_content %}
+<h1>Airplane Crashes - Information Visualization Project</h1>
+
+<h2> Technologies used</h2>
+<ul>
+    <li> Python based Flask Framework </li>
+    <li> D3 and D3V4 for Bar Chart and other visualizations </li>
+    <li> HighCharts for Box Plot and Heat Map </li>
+    <li> d3-geomap for Choropleth </li>
+    <li> datamaps for respresentation of spatial data on the map</li>
+    <li> Google GeoCoding API to convert location to latitude and longitude </li>
+    <li> Geonames API to convert latitude and longitude to ISO ALPHA-2 country code </li>
+    <li> Pycountry library to convert ISO ALPHA-2 to ISO ALPHA-3 country code </li>
+    <li> Bootstrap for frontend Visualization </li>
+    <li> jquery and jqueryUI for Interactivity </li>
+</ul>
+
+
+{% endblock  %}
